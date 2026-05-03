@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Transformações Geométricas – Revisão 8º Ano</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --teal:   #0d9488;
+  --teal-l: #ccfbf1;
+  --teal-m: #2dd4bf;
+  --rose:   #be185d;
+  --rose-l: #fce7f3;
+  --rose-m: #f472b6;
+  --violet: #7c3aed;
+  --violet-l:#ede9fe;
+  --amber:  #d97706;
+  --amber-l:#fef3c7;
+  --sky:    #0369a1;
+  --sky-l:  #e0f2fe;
+  --gray:   #f1f5f9;
+  --text:   #0f172a;
+  --muted:  #64748b;
+  --white:  #ffffff;
+  --radius: 14px;
+  --pad: clamp(1.2rem,2.5vw,2.8rem);
+  --gap: clamp(.75rem,1.5vw,1.4rem);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{
+  font-family:'DM Sans',sans-serif;font-size:15px;
+  background:#07070f;color:var(--text);
+  height:100%;width:100%;
+  overscroll-behavior:none;-webkit-text-size-adjust:100%;
+}
+
+/* ─── ANIMATED GRID BG ─── */
+#bg{
+  position:fixed;inset:0;z-index:0;
+  background:
+    linear-gradient(rgba(13,148,136,.07) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(13,148,136,.07) 1px,transparent 1px),
+    radial-gradient(ellipse at 30% 30%,#0d1a28 0%,#07070f 70%);
+  background-size:40px 40px,40px 40px,100% 100%;
+  animation:gridPan 20s linear infinite;
+  pointer-events:none;
+}
+@keyframes gridPan{from{background-position:0 0,0 0,0 0}to{background-position:40px 40px,40px 40px,0 0}}
+
+/* ─── FLOATING SHAPES ─── */
+.bg-shape{
+  position:fixed;border-radius:50%;filter:blur(80px);
+  opacity:.18;pointer-events:none;z-index:0;
+}
+.bs1{width:400px;height:400px;background:var(--teal);top:-100px;right:-100px;animation:float1 8s ease-in-out infinite alternate}
+.bs2{width:300px;height:300px;background:var(--rose);bottom:-80px;left:-80px;animation:float2 11s ease-in-out infinite alternate}
+.bs3{width:250px;height:250px;background:var(--violet);top:40%;left:50%;animation:float3 9s ease-in-out infinite alternate}
+@keyframes float1{from{transform:translate(0,0)}to{transform:translate(-30px,40px)}}
+@keyframes float2{from{transform:translate(0,0)}to{transform:translate(40px,-30px)}}
+@keyframes float3{from{transform:translate(-50%,-50%) scale(1)}to{transform:translate(-50%,-50%) scale(1.2)}}
+
+/* ─── PROGRESS ─── */
+#progress{position:fixed;top:0;left:0;z-index:300;height:3px;width:0%;background:linear-gradient(90deg,#2dd4bf,#f472b6,#a78bfa);transition:width .5s ease}
+
+/* ─── BADGE ─── */
+#slide-badge{
+  position:fixed;top:14px;left:18px;z-index:200;
+  font-size:12px;font-weight:600;color:rgba(255,255,255,.4);
+  letter-spacing:.05em;pointer-events:none;
+}
+
+/* ─── HINT ─── */
+#hint{position:fixed;top:14px;right:18px;z-index:200;display:flex;gap:6px;align-items:center}
+.hint-key{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:5px;padding:3px 8px;font-size:11px;color:rgba(255,255,255,.4)}
+@media(pointer:coarse){#hint{display:none}}
+
+/* ─── SLIDES ─── */
+#slides-outer{position:fixed;inset:0;z-index:1;overflow:hidden}
+.slide{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:clamp(.5rem,2vw,2rem);
+  padding-bottom:clamp(70px,10vh,90px);
+  opacity:0;transform:translateY(50px) scale(0.97);
+  transition:opacity .55s cubic-bezier(.4,0,.2,1),transform .55s cubic-bezier(.4,0,.2,1);
+  pointer-events:none;will-change:transform,opacity;
+}
+.slide.active{opacity:1;transform:none;pointer-events:all}
+
+/* ─── CARD ─── */
+.card{
+  background:rgba(255,255,255,.97);
+  border-radius:clamp(16px,2vw,26px);
+  padding:var(--pad);
+  width:100%;max-width:clamp(480px,82vw,1080px);
+  box-shadow:0 28px 80px rgba(0,0,0,.3),0 0 0 1px rgba(255,255,255,.06);
+  position:relative;overflow:hidden;
+}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:var(--card-accent,linear-gradient(90deg,#0d9488,#7c3aed))}
+
+/* ─── SLIDE TAG ─── */
+.slide-tag{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  padding:4px 12px;border-radius:99px;
+  background:var(--tag-bg,#ccfbf1);color:var(--tag-color,#0f766e);
+  margin-bottom:clamp(.5rem,.8vw,.9rem);
+}
+.slide-title{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(1.25rem,2vw,2rem);font-weight:800;
+  color:var(--text);margin-bottom:clamp(.65rem,1.1vw,1.3rem);line-height:1.2;
+}
+
+/* ─── LAYOUTS ─── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
+.three-col{display:grid;grid-template-columns:repeat(3,1fr);gap:calc(var(--gap)*.85)}
+@media(max-width:600px){.two-col{grid-template-columns:1fr}.three-col{grid-template-columns:1fr 1fr}}
+
+/* ─── INFO BOX ─── */
+.info-box{
+  background:var(--gray);border-radius:var(--radius);
+  padding:clamp(.7rem,.9vw,1.1rem) clamp(.8rem,1.1vw,1.3rem);
+  border:1.5px solid transparent;
+}
+.info-box h3{font-size:14px;font-weight:700;color:var(--text);margin-bottom:.35rem}
+.info-box p,.info-box li{font-size:13px;color:var(--muted);line-height:1.6}
+.info-box ul{padding-left:1.1rem}
+.info-box li{margin-bottom:2px}
+
+/* ─── STEP LIST ─── */
+.step-list{display:flex;flex-direction:column;gap:clamp(7px,.7vw,10px)}
+.step-item{display:flex;gap:10px;align-items:flex-start}
+.step-num{
+  min-width:26px;height:26px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;color:white;
+  background:var(--teal);flex-shrink:0;margin-top:1px;
+}
+.step-text{font-size:13px;color:var(--muted);line-height:1.55}
+.step-text strong{color:var(--text);font-weight:700}
+
+/* ─── TIP / WARN / KEY ─── */
+.tip-box{background:var(--teal-l);border-left:4px solid var(--teal);border-radius:0 10px 10px 0;padding:.6rem .9rem;margin-top:.6rem;font-size:13px;color:#0f6b5e;line-height:1.55}
+.warn-box{background:var(--amber-l);border-left:4px solid var(--amber);border-radius:0 10px 10px 0;padding:.6rem .9rem;margin-top:.6rem;font-size:13px;color:#92400e;line-height:1.55}
+.key-box{background:var(--rose-l);border-left:4px solid var(--rose);border-radius:0 10px 10px 0;padding:.6rem .9rem;margin-top:.6rem;font-size:13px;color:#9d174d;line-height:1.55}
+
+/* ─── FORMULA BOX ─── */
+.formula-box{
+  background:var(--teal-l);border:2px solid var(--teal-m);
+  border-radius:var(--radius);padding:.75rem 1.1rem;
+  text-align:center;margin:.6rem 0;
+  font-family:'Playfair Display',serif;
+  font-size:clamp(13px,1.4vw,18px);font-weight:700;color:var(--teal);
+}
+
+/* ─── CHIP ─── */
+.chip{display:inline-block;padding:2px 8px;border-radius:99px;font-weight:700;font-size:12px}
+.chip-teal{background:var(--teal-l);color:var(--teal)}
+.chip-rose{background:var(--rose-l);color:var(--rose)}
+.chip-violet{background:var(--violet-l);color:var(--violet)}
+
+/* ─── REVEAL ─── */
+.reveal{opacity:0;transform:translateY(20px);transition:opacity .55s ease,transform .55s ease}
+.reveal.visible{opacity:1;transform:none}
+
+/* ─── NAV ─── */
+#nav{
+  position:fixed;bottom:clamp(14px,2.5vh,28px);left:50%;transform:translateX(-50%);
+  z-index:200;display:flex;align-items:center;gap:clamp(8px,1vw,14px);
+  background:rgba(255,255,255,.09);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,.18);border-radius:99px;
+  padding:clamp(6px,.6vw,9px) clamp(12px,1.5vw,20px);
+  box-shadow:0 8px 32px rgba(0,0,0,.4);
+}
+.nav-btn{
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);
+  color:white;border-radius:99px;padding:clamp(7px,.6vw,10px) clamp(16px,1.6vw,24px);
+  font-size:15px;font-weight:800;cursor:pointer;transition:all .2s;
+  font-family:'DM Sans',sans-serif;min-width:48px;min-height:44px;
+  display:flex;align-items:center;justify-content:center;
+}
+.nav-btn:hover:not(:disabled){background:rgba(255,255,255,.25);transform:scale(1.06)}
+.nav-btn:disabled{opacity:.3;cursor:default}
+.nav-btn:active:not(:disabled){transform:scale(.96)}
+#slide-info{font-size:13px;font-weight:700;color:white;letter-spacing:.05em;min-width:50px;text-align:center}
+.dot-row{display:flex;gap:5px;align-items:center}
+.dot{width:7px;height:7px;border-radius:99px;background:rgba(255,255,255,.28);cursor:pointer;transition:all .3s;min-width:7px}
+.dot.active{width:20px;background:white}
+
+/* ─── SWIPE ─── */
+#swipe-hint{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);font-size:11px;color:rgba(255,255,255,.3);z-index:50;display:none;animation:bounce 2s ease-in-out infinite;white-space:nowrap}
+@media(pointer:coarse){#swipe-hint{display:block}}
+@keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-5px)}}
+
+/* ─── TRANSFORM DEMO ─── */
+.transform-demo{
+  background:var(--gray);border-radius:var(--radius);
+  padding:.9rem 1rem;
+}
+.transform-demo h3{font-size:13px;font-weight:700;color:var(--text);margin-bottom:.5rem}
+
+/* ─── OVERLAY MODAL ─── */
+.modal-overlay{
+  position:fixed;inset:0;z-index:1000;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(7,7,15,.8);backdrop-filter:blur(10px);
+  opacity:0;pointer-events:none;transition:opacity .25s ease;
+}
+.modal-overlay.visible{opacity:1;pointer-events:all}
+.modal-card{
+  border-radius:20px;padding:1.75rem 2.25rem;
+  max-width:400px;width:92%;
+  transform:scale(.85);transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+  box-shadow:0 32px 80px rgba(0,0,0,.5);
+}
+.modal-overlay.visible .modal-card{transform:scale(1)}
+.modal-title{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:800;margin-bottom:.4rem}
+.modal-close{font-size:11px;color:var(--muted);font-style:italic;margin-top:.9rem;text-align:center;cursor:pointer}
+
+/* ─── RESUMÃO CARDS ─── */
+.resumo-card{
+  background:var(--gray);border-radius:var(--radius);
+  padding:clamp(.75rem,.9vw,1rem) clamp(.85rem,1.1vw,1.2rem);
+  border:2px solid transparent;cursor:pointer;user-select:none;
+  transition:transform .2s,box-shadow .2s,border-color .2s;
+}
+.resumo-card:hover{transform:scale(1.025);box-shadow:0 6px 20px rgba(0,0,0,.1)}
+.resumo-card .hold-hint{font-size:10px;color:var(--muted);margin-top:5px;font-style:italic}
+
+/* ─── QUIZ ─── */
+.challenge-card{
+  background:var(--gray);border-radius:var(--radius);
+  padding:clamp(.75rem,.9vw,.95rem) clamp(.85rem,1.1vw,1.15rem);
+  border:2px solid transparent;transition:all .25s;
+}
+.challenge-card:hover{border-color:var(--teal-m);background:var(--teal-l)}
+.challenge-card .q-text{font-size:13px;color:var(--text);font-weight:700;margin-bottom:.4rem}
+.challenge-card .options{display:flex;flex-wrap:wrap;gap:5px;margin-top:.4rem}
+.opt-btn{
+  padding:5px 12px;border-radius:99px;border:1.5px solid #cbd5e1;
+  background:white;font-size:12px;font-weight:700;cursor:pointer;
+  transition:all .2s;font-family:'DM Sans',sans-serif;color:var(--text);min-height:36px;
+}
+.opt-btn:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-l)}
+.opt-btn.correct{background:var(--teal-l);border-color:var(--teal);color:var(--teal)}
+.opt-btn.wrong{background:var(--rose-l);border-color:var(--rose);color:var(--rose)}
+.feedback{font-size:12px;margin-top:6px;font-weight:700;min-height:18px}
+.feedback.ok{color:var(--teal)}
+.feedback.nok{color:var(--rose)}
+
+/* ─── TOPIC PILLS ─── */
+.topic-pills{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:1rem}
+.topic-pill{border-radius:10px;padding:6px 14px;font-size:12px;font-weight:700}
+
+/* ─── TRANSFORMATION TYPE CARDS ─── */
+.transf-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.transf-card{
+  border-radius:12px;padding:.8rem .95rem;
+  border:2px solid transparent;cursor:pointer;
+  transition:transform .2s,box-shadow .2s;user-select:none;
+}
+.transf-card:hover{transform:scale(1.035);box-shadow:0 8px 24px rgba(0,0,0,.12)}
+.transf-label{font-weight:800;font-size:13px;margin-bottom:3px}
+.transf-desc{font-size:12px;line-height:1.5}
+.tc-ref{background:#e0faf5;border-color:#2dd4bf}.tc-ref .transf-label{color:#0f766e}.tc-ref .transf-desc{color:#0d9488}
+.tc-rot{background:var(--rose-l);border-color:var(--rose-m)}.tc-rot .transf-label{color:#9d174d}.tc-rot .transf-desc{color:var(--rose)}
+.tc-tra{background:var(--amber-l);border-color:#fbbf24}.tc-tra .transf-label{color:#78350f}.tc-tra .transf-desc{color:var(--amber)}
+.tc-com{background:var(--violet-l);border-color:#a78bfa}.tc-com .transf-label{color:#4c1d95}.tc-com .transf-desc{color:var(--violet)}
+
+/* ─── INTERACTIVE TRANSFORMATION BUILDER ─── */
+.builder-panel{
+  background:var(--gray);border-radius:var(--radius);
+  padding:.85rem 1rem;
+  display:flex;flex-direction:column;gap:.5rem;
+}
+.builder-panel h3{font-size:13px;font-weight:700;color:var(--text)}
+.build-btn-row{display:flex;gap:6px;flex-wrap:wrap}
+.build-btn{
+  padding:6px 14px;border-radius:99px;border:2px solid;
+  font-size:12px;font-weight:700;cursor:pointer;
+  transition:all .2s;font-family:'DM Sans',sans-serif;min-height:36px;
+}
+.build-btn:active{transform:scale(.94)}
+.bb-ref{background:#e0faf5;border-color:var(--teal);color:var(--teal)}
+.bb-rot{background:var(--rose-l);border-color:var(--rose);color:var(--rose)}
+.bb-tra{background:var(--amber-l);border-color:var(--amber);color:var(--amber)}
+.bb-reset{background:var(--violet-l);border-color:var(--violet);color:var(--violet)}
+.transform-log{
+  min-height:22px;font-size:12px;font-weight:700;color:var(--muted);
+  display:flex;align-items:center;gap:5px;flex-wrap:wrap;
+}
+.log-tag{
+  background:white;border-radius:99px;padding:2px 8px;
+  font-size:11px;font-weight:700;border:1px solid #e2e8f0;
+}
+.log-tag.ref{border-color:var(--teal);color:var(--teal)}
+.log-tag.rot{border-color:var(--rose);color:var(--rose)}
+.log-tag.tra{border-color:var(--amber);color:var(--amber)}
+
+/* ─── SYMMETRY AXIS DEMO ─── */
+.sym-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.sym-card{
+  border-radius:10px;padding:.6rem;
+  background:var(--gray);border:1.5px solid #e2e8f0;
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  cursor:pointer;transition:all .2s;
+}
+.sym-card:hover{border-color:var(--teal);background:var(--teal-l)}
+.sym-card svg{display:block}
+.sym-label{font-size:11px;font-weight:700;color:var(--muted);text-align:center}
+
+/* ─── MODAL STYLES PER TYPE ─── */
+.modal-ref .modal-card{background:#e0faf5}
+.modal-ref .modal-title{color:#0f766e}
+.modal-rot .modal-card{background:var(--rose-l)}
+.modal-rot .modal-title{color:#9d174d}
+.modal-tra .modal-card{background:var(--amber-l)}
+.modal-tra .modal-title{color:#78350f}
+.modal-com .modal-card{background:var(--violet-l)}
+.modal-com .modal-title{color:#4c1d95}
+.modal-rov .modal-card{background:var(--sky-l)}
+.modal-rov .modal-title{color:var(--sky)}
+</style>
+</head>
+<body>
+
+<div id="bg"></div>
+<div class="bg-shape bs1"></div>
+<div class="bg-shape bs2"></div>
+<div class="bg-shape bs3"></div>
+<div id="progress"></div>
+<div id="slide-badge">📐 Transformações Geométricas · 8º Ano</div>
+<div id="hint"><span class="hint-key">← →</span><span class="hint-key">scroll</span><span style="font-size:11px;color:rgba(255,255,255,.3)">para navegar</span></div>
+<div id="swipe-hint">← deslize para navegar →</div>
+
+<!-- ═══════════ MODALS ═══════════ -->
+
+<div class="modal-overlay modal-ref" id="mod-ref">
+  <div class="modal-card">
+    <div class="modal-title">🪞 Reflexão</div>
+    <div style="font-size:13px;color:#0f766e;font-weight:700;margin-bottom:.5rem">Como reconhecer:</div>
+    <div style="font-size:12px;color:#0f6b5e;line-height:1.85">
+      ✅ A figura é espelhada em relação a um eixo<br>
+      ✅ Tamanho e forma se mantêm<br>
+      ✅ A distância de cada ponto ao eixo é igual dos dois lados<br>
+      ✅ A orientação fica invertida (espelhada!)<br><br>
+      <strong>Eixo X:</strong> (x, y) → (x, −y)<br>
+      <strong>Eixo Y:</strong> (x, y) → (−x, y)<br>
+    </div>
+    <div class="modal-close" onclick="closeModal('mod-ref')">Toque para fechar ✕</div>
+  </div>
+</div>
+
+<div class="modal-overlay modal-rot" id="mod-rot">
+  <div class="modal-card">
+    <div class="modal-title">🔄 Rotação</div>
+    <div style="font-size:13px;color:#9d174d;font-weight:700;margin-bottom:.5rem">Como reconhecer:</div>
+    <div style="font-size:12px;color:#881337;line-height:1.85">
+      ✅ A figura gira em torno de um ponto (centro)<br>
+      ✅ Tamanho e forma se mantêm<br>
+      ✅ Precisa de: centro, ângulo e sentido<br>
+      ✅ Orientação pode ou não se inverter<br><br>
+      <strong>90° horário:</strong> (x, y) → (y, −x)<br>
+      <strong>180°:</strong> (x, y) → (−x, −y)<br>
+      <strong>90° anti-horário:</strong> (x, y) → (−y, x)<br>
+    </div>
+    <div class="modal-close" onclick="closeModal('mod-rot')">Toque para fechar ✕</div>
+  </div>
+</div>
+
+<div class="modal-overlay modal-tra" id="mod-tra">
+  <div class="modal-card">
+    <div class="modal-title">➡️ Translação</div>
+    <div style="font-size:13px;color:#78350f;font-weight:700;margin-bottom:.5rem">Como reconhecer:</div>
+    <div style="font-size:12px;color:#713f12;line-height:1.85">
+      ✅ A figura desliza sem girar nem espelhar<br>
+      ✅ Tamanho, forma e orientação se mantêm<br>
+      ✅ Definida por um vetor (direção + comprimento)<br>
+      ✅ Todos os pontos se deslocam igualmente<br><br>
+      <strong>Vetor (a, b):</strong> (x, y) → (x+a, y+b)<br>
+      A figura "chegou" é idêntica à original!
+    </div>
+    <div class="modal-close" onclick="closeModal('mod-tra')">Toque para fechar ✕</div>
+  </div>
+</div>
+
+<div class="modal-overlay modal-com" id="mod-com">
+  <div class="modal-card">
+    <div class="modal-title">🔀 Transformação Combinatória</div>
+    <div style="font-size:13px;color:#4c1d95;font-weight:700;margin-bottom:.5rem">Como reconhecer:</div>
+    <div style="font-size:12px;color:#3b0764;line-height:1.85">
+      ✅ Aplicação de duas ou mais transformações em sequência<br>
+      ✅ A ordem das transformações importa!<br>
+      ✅ Reflexão Deslizante = Reflexão + Translação<br><br>
+      <strong>Exemplos comuns:</strong><br>
+      • Reflexão + Translação (reflexão deslizante)<br>
+      • Rotação + Reflexão<br>
+      • Translação + Rotação<br><br>
+      ⚠️ Cada etapa deve ser analisada separadamente!
+    </div>
+    <div class="modal-close" onclick="closeModal('mod-com')">Toque para fechar ✕</div>
+  </div>
+</div>
+
+<!-- RESUMÃO MODALS -->
+<div class="modal-overlay modal-ref" id="rov-reflexao">
+  <div class="modal-card">
+    <div class="modal-title">🪞 Reflexão — Resumo</div>
+    <div style="font-size:12px;color:#0f6b5e;line-height:1.85">
+      ✅ Espelhamento em relação a um eixo<br>
+      ✅ Mantém tamanho e forma<br>
+      ✅ Inverte a orientação<br>
+      ✅ (x,y) → (−x,y) eixo Y | (x,y)→(x,−y) eixo X<br>
+      ✅ Cada ponto fica equidistante do eixo<br>
+      ✅ A imagem "parece" um espelho
+    </div>
+    <div class="modal-close" onclick="closeModal('rov-reflexao')">Toque para fechar ✕</div>
+  </div>
+</div>
+<div class="modal-overlay modal-rot" id="rov-rotacao">
+  <div class="modal-card">
+    <div class="modal-title">🔄 Rotação — Resumo</div>
+    <div style="font-size:12px;color:#881337;line-height:1.85">
+      ✅ Giro em torno de um ponto (centro)<br>
+      ✅ Mantém tamanho e forma<br>
+      ✅ Precisa: centro + ângulo + sentido<br>
+      ✅ 90° horário: (x,y)→(y,−x)<br>
+      ✅ 180°: (x,y)→(−x,−y)<br>
+      ✅ 90° anti-horário: (x,y)→(−y,x)
+    </div>
+    <div class="modal-close" onclick="closeModal('rov-rotacao')">Toque para fechar ✕</div>
+  </div>
+</div>
+<div class="modal-overlay modal-tra" id="rov-translacao">
+  <div class="modal-card">
+    <div class="modal-title">➡️ Translação — Resumo</div>
+    <div style="font-size:12px;color:#713f12;line-height:1.85">
+      ✅ Deslizamento sem girar ou espelhar<br>
+      ✅ Mantém tamanho, forma e orientação<br>
+      ✅ Definida por vetor (a,b)<br>
+      ✅ (x,y) → (x+a, y+b)<br>
+      ✅ Todos os pontos se movem igual<br>
+      ✅ Figura "chegou" = idêntica à original
+    </div>
+    <div class="modal-close" onclick="closeModal('rov-translacao')">Toque para fechar ✕</div>
+  </div>
+</div>
+<div class="modal-overlay modal-com" id="rov-combinatoria">
+  <div class="modal-card">
+    <div class="modal-title">🔀 Transformação Combinatória — Resumo</div>
+    <div style="font-size:12px;color:#3b0764;line-height:1.85">
+      ✅ Duas ou mais transformações em sequência<br>
+      ✅ A ordem importa!<br>
+      ✅ Reflexão deslizante = reflexão + translação<br>
+      ✅ Analise uma transformação de cada vez<br>
+      ✅ Verifique orientação e posição em cada etapa
+    </div>
+    <div class="modal-close" onclick="closeModal('rov-combinatoria')">Toque para fechar ✕</div>
+  </div>
+</div>
+<div class="modal-overlay modal-rov" id="rov-simetria">
+  <div class="modal-card">
+    <div class="modal-title">✳️ Eixos de Simetria</div>
+    <div style="font-size:12px;color:#0369a1;line-height:1.85">
+      ✅ Eixo que divide a figura em duas metades espelhadas<br>
+      ✅ Quadrado: 4 eixos (2 medianas + 2 diagonais)<br>
+      ✅ Retângulo: 2 eixos (só as medianas)<br>
+      ✅ Círculo: infinitos eixos<br>
+      ✅ Triângulo equilátero: 3 eixos<br>
+      ✅ Letras como A, M, O têm eixo vertical
+    </div>
+    <div class="modal-close" onclick="closeModal('rov-simetria')">Toque para fechar ✕</div>
+  </div>
+</div>
+<div class="modal-overlay" id="rov-macetes" style="">
+  <div class="modal-card" style="background:#f0fdf4">
+    <div class="modal-title" style="color:#166534">🧠 Macetes de Ouro</div>
+    <div style="font-size:12px;color:#15803d;line-height:1.85">
+      ✅ Reflexão → orientação INVERTE (espelho)<br>
+      ✅ Rotação → figura GIRA mantendo tamanho<br>
+      ✅ Translação → figura DESLIZA igual (vetor)<br>
+      ✅ Combinatória → analise UMA de cada vez<br>
+      ✅ Reflexão deslizante = reflexão + translação<br>
+      ✅ Translação: forma e orientação IGUAIS à original
+    </div>
+    <div class="modal-close" onclick="closeModal('rov-macetes')">Toque para fechar ✕</div>
+  </div>
+</div>
+
+<div id="slides-outer">
+
+<!-- ══════════ S0 · CAPA ══════════ -->
+<div class="slide active" id="s0">
+  <div class="card" style="--card-accent:linear-gradient(90deg,#0d9488,#be185d,#7c3aed);text-align:center">
+    <div style="font-size:clamp(2.5rem,5vw,3.8rem);margin-bottom:.75rem">📐</div>
+    <div class="slide-tag" style="justify-content:center;--tag-bg:#ede9fe;--tag-color:#7c3aed">Revisão · Simulado Trimestral</div>
+    <div class="slide-title" style="font-size:clamp(1.6rem,3vw,2.6rem)">Transformações Geométricas</div>
+    <div style="font-size:1rem;font-weight:600;color:var(--muted);margin-bottom:1rem">Reflexão · Rotação · Translação · Combinatória · 8º Ano</div>
+    <p style="font-size:.95rem;color:var(--muted);max-width:500px;margin:0 auto 1rem;line-height:1.7">
+      Revise os conceitos que vão cair no simulado. Use as setas, scroll ou os botões abaixo para navegar.
+    </p>
+    <div class="topic-pills">
+      <div class="topic-pill" style="background:var(--teal-l);color:var(--teal)">🪞 Reflexão</div>
+      <div class="topic-pill" style="background:var(--rose-l);color:var(--rose)">🔄 Rotação</div>
+      <div class="topic-pill" style="background:var(--amber-l);color:var(--amber)">➡️ Translação</div>
+      <div class="topic-pill" style="background:var(--violet-l);color:var(--violet)">🔀 Combinatória</div>
+      <div class="topic-pill" style="background:var(--sky-l);color:var(--sky)">✳️ Simetria</div>
+      <div class="topic-pill" style="background:#fde8e2;color:#c43a1a">⚡ Desafie-se!</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ S1 · VISÃO GERAL ══════════ -->
+<div class="slide" id="s1">
+  <div class="card" style="--card-accent:linear-gradient(90deg,#0d9488,#2dd4bf)">
+    <div class="slide-tag" style="--tag-bg:var(--teal-l);--tag-color:#0f766e">🗺️ Visão Geral</div>
+    <div class="slide-title">As 4 Transformações Geométricas</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;font-weight:700">💡 Clique e segure para ver detalhes de cada uma!</div>
+    <div class="transf-grid" style="margin-bottom:.85rem">
+      <div class="transf-card tc-ref reveal" data-mod="ref">
+        <div class="transf-label">🪞 Reflexão</div>
+        <div class="transf-desc"><strong>Espelha</strong> a figura em relação a um eixo. A imagem fica invertida mas com o mesmo tamanho.</div>
+      </div>
+      <div class="transf-card tc-rot reveal" data-mod="rot" style="transition-delay:.12s">
+        <div class="transf-label">🔄 Rotação</div>
+        <div class="transf-desc"><strong>Gira</strong> a figura em torno de um ponto (centro). Mantém tamanho e forma.</div>
+      </div>
+      <div class="transf-card tc-tra reveal" data-mod="tra" style="transition-delay:.24s">
+        <div class="transf-label">➡️ Translação</div>
+        <div class="transf-desc"><strong>Desliza</strong> a figura sem girar. Usa um vetor para indicar direção e distância.</div>
+      </div>
+      <div class="transf-card tc-com reveal" data-mod="com" style="transition-delay:.36s">
+        <div class="transf-label">🔀 Combinatória</div>
+        <div class="transf-desc">Aplica <strong>duas ou mais</strong> transformações em sequência. A ordem importa!</div>
+      </div>
+    </div>
+    <div class="tip-box reveal" style="transition-delay:.48s">
+      <strong>🧠 Macete geral:</strong> Nas três primeiras, o tamanho e a forma NUNCA mudam! A diferença está na <strong>orientação</strong> (reflexão inverte!) e no <strong>movimento</strong> (deslizar vs. girar vs. espelhar).
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ S2 · REFLEXÃO ══════════ -->
+<div class="slide" id="s2">
+  <div class="card" style="--card-accent:linear-gradient(90deg,#0d9488,#2dd4bf)">
+    <div class="slide-tag" style="--tag-bg:var(--teal-l);--tag-color:#0f766e">🪞 Reflexão</div>
+    <div class="slide-title">Reflexão — o espelho da geometria</div>
+    <div class="two-col">
+      <div>
+        <div class="step-list">
+          <div class="step-item reveal">
+            <div class="step-num" style="background:var(--teal)">1</div>
+            <div class="step-text">Existe um <strong>eixo de reflexão</strong> (uma reta) que serve como espelho.</div>
+          </div>
+          <div class="step-item reveal" style="transition-delay:.12s">
+            <div class="step-num" style="background:var(--teal)">2</div>
+            <div class="step-text">Cada ponto da figura original fica a <strong>mesma distância</strong> do eixo que seu correspondente na imagem.</div>
+          </div>
+          <div class="step-item reveal" style="transition-delay:.24s">
+            <div class="step-num" style="background:var(--teal)">3</div>
+            <div class="step-text">A <strong>orientação é invertida</strong> — o que estava à esquerda vai para a direita, como num espelho!</div>
+          </div>
+          <div class="step-item reveal" style="transition-delay:.36s">
+            <div class="step-num" style="background:var(--teal)">4</div>
+            <div class="step-text"><strong>Tamanho e ângulos</strong> são preservados — a figura não muda de forma.</div>
+          </div>
+        </div>
+        <div class="tip-box reveal" style="transition-delay:.48s">
+          <strong>🧠 Macete:</strong> Se você colocar um espelho no eixo, você vê a imagem transformada! A figura "virou ao contrário".
+        </div>
+        <div class="warn-box reveal" style="transition-delay:.6s">
+          <strong>⚠️ Atenção:</strong> Reflexão no <strong>eixo X</strong>: y muda de sinal. Reflexão no <strong>eixo Y</strong>: x muda de sinal.
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.7rem">
+        <div class="transform-demo">
+          <h3>Exemplo: reflexão no eixo Y</h3>
+          <canvas id="canvas-ref" width="260" height="180" style="border-radius:8px;border:1px solid #e2e8f0;background:#f8fbff;display:block;width:100%;max-width:280px;height:auto;cursor:pointer"></canvas>
+          <p style="font-size:11px;color:var(--muted);margin-top:5px;text-align:center">Clique para animar!</p>
+        </div>
+        <div style="background:var(--teal-l);border-radius:10px;padding:.75rem 1rem;font-size:12px;color:#0f6b5e">
+          <div style="font-weight:700;margin-bottom:4px">Coordenadas — eixo Y:</div>
+          <div>A(2, 3) → <strong>A'(−2, 3)</strong></div>
+          <div>B(4, 1) → <strong>B'(−4, 1)</strong></div>
+          <div>C(3, −1) → <strong>C'(−3, −1)</strong></div>
+          <div style="margin-top:4px;font-size:11px;opacity:.8">O x muda de sinal, o y fica igual!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ S3 · ROTAÇÃO ══════════ -->
+<div class="slide" id="s3">
+  <div class="card" style="--card-accent:linear-gradient(90deg,#be185d,#f472b6)">
+    <div class="slide-tag" style="--tag-bg:var(--rose-l);--tag-color:#9d174d">🔄 Rotação</div>
+    <div class="slide-title">Rotação — a figura que gira</div>
+    <div class="two-col">
+      <div>
+        <div class="step-list">
+          <div class="step-item reveal">
+            <div class="step-num" style="background:var(--rose)">1</div>
+            <div class="step-text">Existe um <strong>centro de rotação</strong> (ponto fixo) em torno do qual a figura gira.</div>
+          </div>
+          <div class="step-item reveal" style="transition-delay:.12s">
+            <div class="step-num" style="background:var(--rose)">2</div>
+            <div class="step-text">Precisa de 3 informações: <strong>centro</strong>, <strong>ângulo</strong> e <strong>sentido</strong> (horário ou anti-horário).</div>
+          </div>
+          <div class="step-item reveal" style="transition-delay:.24s">
+            <div class="step-num" style="background:var(--rose)">3</div>
+            <div class="step-text">Todos os pontos percorrem a <strong>mesma quantidade de graus</strong> em arcos de círculo.</div>
+          </div>
+          <div class="step-item reveal" style="transition-delay:.36s">
+            <div class="step-num" style="background:var(--rose)">4</div>
+            <div class="step-text"><strong>Tamanho e forma</strong> são preservados. A orientação pode ou não se inverter.</div>
+          </div>
+        </div>
+        <div style="background:var(--rose-l);border-radius:10px;padding:.75rem 1rem;font-size:12px;color:#881337;margin-top:.65rem">
+          <div style="font-weight:700;margin-bottom:4px">Regras para rotação em torno da Origem:</div>
+          <div><strong>90° horário:</strong> (x, y) → (y, −x)</div>
+          <div><strong>90° anti-horário:</strong> (x, y) → (−y, x)</div>
+          <div><strong>180°:</strong> (x, y) → (−x, −y)</div>
+        </div>
+        <div class="key-box reveal" style="transition-delay:.48s">
+          <strong>⚠️ Atenção:</strong> Para rotações que <strong>não são</strong> 90°, 180°, 270°, é preciso usar trigonometria ou malha quadriculada para encontrar os pontos!
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.7rem">
+        <div class="transform-demo">
+          <h3>Exemplo: rotação 90° horário</h3>
+          <canvas id="canvas-rot" width="260" height="180" style="border-radius:8px;border:1px solid #e2e8f0;background:#f8fbff;display:block;width:100%;max-width:280px;height:auto;cursor:pointer"></canvas>
+          <p style="font-size:11px;color:var(--muted);margin-top:5px;text-align:center">Clique para animar!</p>
+        </div>
+        <div style="background:var(--rose-l);border-radius:10px;padding:.75rem 1rem;font-size:12px;color:#881337">
+          <div style="font-weight:700;margin-bottom:4px">Exemplo 90° horário (origem):</div>
+          <div>A(1, 3) → <strong>A'(3, −1)</strong></div>
+          <div>B(3, 2) → <strong>B'(2, −3)</strong></div>
+          <div>C(2, 1) → <strong>C'(1, −2)</strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ S4 · TRANSLAÇÃO ══════════ -->
+<div class="slide" id="s4">
+  <div class="card" style="--card-accent:linear-gradient(90deg,#d97706,#fbbf24)">
+    <div class="slide-tag" style="--tag-bg:var(--amber-l);--tag-color:#92400e">➡️ Translação</div>
+    <div class="slide-title">Translação — o deslizamento perfeito</div>
+    <div class="two-col">
+      <div>
+        <div class="step-list">
+          <div class="step-item reveal">
+            <div class="step-num" style="background:var(--amber)">1</div>
+            <div class="step-text">A figura <strong>desliza</strong> em uma direção, sem girar e sem espelhar.</div>
+          </div>
+          <div class="step-item reveal" style="transition-delay:.12s">
+            <div class="step-num" style="background:var(--amber)">2</div>
+            <div class="step-text">A translação é definida por um <strong>vetor de translação</strong> (a, b), que indica direção e distância.</div>
+          </div>
+          <div class="step-item reveal" style="transition-delay:.24s">
+            <div class="step-num" style="background:var(--amber)">3</div>
+            <div class="step-text"><strong>Todos os pontos</strong> se deslocam exatamente a mesma quantidade e na mesma direção.</div>
+          </div>
+          <div class="step-item reveal" style="transition-delay:.36s">
+            <div class="step-num" style="background:var(--amber)">4</div>
+            <div class="step-text"><strong>Tamanho, forma e orientação</strong> são totalmente preservados — a imagem é idêntica à original!</div>
+          </div>
+        </div>
+        <div class="formula-box reveal" style="transition-delay:.48s;--card-accent:none;background:var(--amber-l);border-color:#fbbf24;color:#92400e">
+          P(x, y) + vetor(a, b) → P'(x+a, y+b)
+        </div>
+        <div class="tip-box reveal" style="transition-delay:.6s">
+          <strong>🧠 Macete:</strong> Na translação, a imagem transformada é <strong>congruente e paralela</strong> à figura original! Se parece igual mas está em outro lugar → translação!
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.7rem">
+        <div class="transform-demo">
+          <h3>Exemplo: vetor (3, −2)</h3>
+          <canvas id="canvas-tra" width="260" height="180" style="border-radius:8px;border:1px solid #e2e8f0;background:#f8fbff;display:block;width:100%;max-width:280px;height:auto;cursor:pointer"></canvas>
+          <p style="font-size:11px;color:var(--muted);margin-top:5px;text-align:center">Clique para animar!</p>
+        </div>
+        <div style="background:var(--amber-l);border-radius:10px;padding:.75rem 1rem;font-size:12px;color:#92400e">
+          <div style="font-weight:700;margin-bottom:4px">Aplicando vetor(3, −2):</div>
+          <div>A(−2, 3) → <strong>A'(1, 1)</strong></div>
+          <div>B(0, 3) → <strong>B'(3, 1)</strong></div>
+          <div>C(−1, 1) → <strong>C'(2, −1)</strong></div>
+          <div style="margin-top:4px;font-size:11px;opacity:.8">Soma +3 no x e −2 no y de cada ponto!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ S5 · COMBINATÓRIA ══════════ -->
+<div class="slide" id="s5">
+  <div class="card" style="--card-accent:linear-gradient(90deg,#7c3aed,#a78bfa)">
+    <div class="slide-tag" style="--tag-bg:var(--violet-l);--tag-color:#4c1d95">🔀 Transformação Combinatória</div>
+    <div class="slide-title">Combinando transformações</div>
+    <div class="two-col">
+      <div>
+        <div class="info-box" style="margin-bottom:.7rem">
+          <h3>O que é?</h3>
+          <p>É a aplicação de <strong>duas ou mais transformações</strong> geométricas em sequência. O resultado depende da ordem aplicada!</p>
+        </div>
+        <div class="step-list" style="margin-bottom:.7rem">
+          <div class="step-item reveal">
+            <div class="step-num" style="background:var(--violet)">1</div>
+            <div class="step-text">Identifique cada transformação separadamente.</div>
+          </div>
+          <div class="step-item reveal" style="transition-delay:.12s">
+            <div class="step-num" style="background:var(--violet)">2</div>
+            <div class="step-text">Aplique <strong>uma de cada vez</strong>, na ordem indicada.</div>
+          </div>
+          <div class="step-item reveal" style="transition-delay:.24s">
+            <div class="step-num" style="background:var(--violet)">3</div>
+            <div class="step-text">O resultado da 1ª se torna o ponto de partida da 2ª.</div>
+          </div>
+        </div>
+        <div style="background:var(--violet-l);border-radius:10px;padding:.75rem 1rem;font-size:12px;color:#4c1d95;margin-bottom:.5rem">
+          <div style="font-weight:700;margin-bottom:5px">⭐ Reflexão Deslizante (mais cobrada!):</div>
+          <div style="line-height:1.8">
+            É a composição de uma <strong>reflexão</strong> com uma <strong>translação paralela ao eixo de reflexão</strong>.<br>
+            Passo 1: Reflete a figura no eixo<br>
+            Passo 2: Desliza ao longo do eixo<br>
+          </div>
+        </div>
+        <div class="warn-box reveal" style="transition-delay:.36s">
+          <strong>⚠️ A ordem importa!</strong> Reflexão→Rotação ≠ Rotação→Reflexão. Sempre siga a ordem descrita no problema.
+        </div>
+      </div>
+      <div>
+        <div class="transform-demo" style="margin-bottom:.7rem">
+          <h3>🕹️ Construtor de transformações</h3>
+          <div class="builder-panel">
+            <div class="build-btn-row">
+              <button class="build-btn bb-ref" onclick="applyTransform('ref')">🪞 Reflexão</button>
+              <button class="build-btn bb-rot" onclick="applyTransform('rot')">🔄 Rotação 90°</button>
+              <button class="build-btn bb-tra" onclick="applyTransform('tra')">➡️ Translação</button>
+              <button class="build-btn bb-reset" onclick="resetTransforms()">↩ Resetar</button>
+            </div>
+            <div class="transform-log" id="transform-log"><span style="font-style:italic;font-size:12px;color:var(--muted)">Aplique transformações acima...</span></div>
+          </div>
+          <canvas id="canvas-com" width="260" height="180" style="border-radius:8px;border:1px solid #e2e8f0;background:#f8fbff;display:block;width:100%;max-width:280px;height:auto;margin-top:8px"></canvas>
+        </div>
+        <div class="tip-box">
+          <strong>💡 Dica:</strong> Experimente aplicar Reflexão + Translação para ver a reflexão deslizante! Compare com Translação + Reflexão — o resultado é diferente?
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ S6 · EIXOS DE SIMETRIA ══════════ -->
+<div class="slide" id="s6">
+  <div class="card" style="--card-accent:linear-gradient(90deg,#0369a1,#38bdf8)">
+    <div class="slide-tag" style="--tag-bg:var(--sky-l);--tag-color:#0369a1">✳️ Simetria de Reflexão</div>
+    <div class="slide-title">Eixos de Simetria das Figuras</div>
+    <div class="two-col">
+      <div>
+        <div class="info-box" style="margin-bottom:.7rem">
+          <h3>O que é um eixo de simetria?</h3>
+          <p>É uma reta que divide a figura em <strong>duas metades espelhadas</strong>. Cada metade é a reflexão da outra em relação a esse eixo.</p>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:700">💡 Clique nas figuras para ver os eixos!</div>
+        <div class="sym-grid" id="sym-grid">
+          <div class="sym-card" onclick="showSymmetry('square')">
+            <svg width="52" height="52" viewBox="0 0 52 52"><rect x="8" y="8" width="36" height="36" fill="#e0faf5" stroke="#0d9488" stroke-width="2"/></svg>
+            <div class="sym-label">Quadrado<br>? eixos</div>
+          </div>
+          <div class="sym-card" onclick="showSymmetry('rect')">
+            <svg width="52" height="52" viewBox="0 0 52 52"><rect x="4" y="14" width="44" height="24" fill="#e0f2fe" stroke="#0369a1" stroke-width="2"/></svg>
+            <div class="sym-label">Retângulo<br>? eixos</div>
+          </div>
+          <div class="sym-card" onclick="showSymmetry('triangle')">
+            <svg width="52" height="52" viewBox="0 0 52 52"><polygon points="26,6 48,46 4,46" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/></svg>
+            <div class="sym-label">Triângulo Equilátero<br>? eixos</div>
+          </div>
+          <div class="sym-card" onclick="showSymmetry('circle')">
+            <svg width="52" height="52" viewBox="0 0 52 52"><circle cx="26" cy="26" r="20" fill="#fce7f3" stroke="#be185d" stroke-width="2"/></svg>
+            <div class="sym-label">Círculo<br>? eixos</div>
+          </div>
+        </div>
+        <canvas id="canvas-sym" width="200" height="140" style="border-radius:10px;border:1.5px solid #e2e8f0;background:#f8fbff;display:block;width:100%;max-width:240px;height:auto;margin-top:10px"></canvas>
+      </div>
+      <div>
+        <div class="info-box" style="margin-bottom:.7rem;border-color:#38bdf8">
+          <h3 style="color:var(--sky)">Quantos eixos cada figura tem?</h3>
+          <div style="display:grid;gap:6px;margin-top:.5rem">
+            <div style="background:#e0faf5;border-radius:8px;padding:8px 10px;font-size:13px">
+              <strong style="color:#0f766e">Quadrado</strong><br>
+              <span style="color:#0d9488;font-size:12px">4 eixos: 2 medianas + 2 diagonais</span>
+            </div>
+            <div style="background:#e0f2fe;border-radius:8px;padding:8px 10px;font-size:13px">
+              <strong style="color:var(--sky)">Retângulo</strong><br>
+              <span style="color:#0369a1;font-size:12px">2 eixos: apenas as medianas</span>
+            </div>
+            <div style="background:var(--violet-l);border-radius:8px;padding:8px 10px;font-size:13px">
+              <strong style="color:var(--violet)">Triângulo equilátero</strong><br>
+              <span style="color:#6d28d9;font-size:12px">3 eixos: cada vértice ao lado oposto</span>
+            </div>
+            <div style="background:var(--rose-l);border-radius:8px;padding:8px 10px;font-size:13px">
+              <strong style="color:var(--rose)">Círculo</strong><br>
+              <span style="color:#be185d;font-size:12px">Infinitos eixos — qualquer diâmetro!</span>
+            </div>
+          </div>
+        </div>
+        <div class="tip-box">
+          <strong>🧠 Macete:</strong> Para verificar se é um eixo de simetria, imagine dobrar o papel nessa linha. As duas metades devem coincidir perfeitamente!
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ S7 · COMO DIFERENCIAR ══════════ -->
+<div class="slide" id="s7">
+  <div class="card" style="--card-accent:linear-gradient(90deg,#0d9488,#be185d,#d97706)">
+    <div class="slide-tag" style="--tag-bg:#f1f5f9;--tag-color:#0f172a">🔍 Como Diferenciar</div>
+    <div class="slide-title">Identificando cada transformação</div>
+    <div class="step-list" style="margin-bottom:.85rem">
+      <div class="step-item reveal">
+        <div class="step-num" style="background:var(--teal)">1</div>
+        <div class="step-text">Verifique a <strong>posição</strong> — a figura está em outro lugar? ➜ Pode ser <span class="chip chip-teal">translação</span></div>
+      </div>
+      <div class="step-item reveal" style="transition-delay:.1s">
+        <div class="step-num" style="background:var(--teal)">2</div>
+        <div class="step-text">Verifique a <strong>orientação</strong> — a figura está invertida como um espelho? ➜ <span class="chip chip-teal">reflexão</span></div>
+      </div>
+      <div class="step-item reveal" style="transition-delay:.2s">
+        <div class="step-num" style="background:var(--teal)">3</div>
+        <div class="step-text">Verifique se a figura está <strong>inclinada/girada</strong> — mesma orientação interna mas virou? ➜ <span class="chip chip-rose">rotação</span></div>
+      </div>
+      <div class="step-item reveal" style="transition-delay:.3s">
+        <div class="step-num" style="background:var(--teal)">4</div>
+        <div class="step-text">Se está <strong>invertida E deslocada</strong> paralelo ao eixo → <span class="chip chip-violet">reflexão deslizante</span></div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+      <div style="background:#e0faf5;border-radius:10px;padding:.75rem .9rem;font-size:12px;color:#0f6b5e;border:1.5px solid var(--teal-m)">
+        <div style="font-weight:800;margin-bottom:4px">✅ Translação</div>
+        <div>✔ Forma = original<br>✔ Orientação = igual<br>✔ Tamanho = igual<br>✔ Posição = diferente</div>
+      </div>
+      <div style="background:var(--rose-l);border-radius:10px;padding:.75rem .9rem;font-size:12px;color:#881337;border:1.5px solid var(--rose-m)">
+        <div style="font-weight:800;margin-bottom:4px">✅ Reflexão</div>
+        <div>✔ Forma = original<br>✔ Orientação = INVERTIDA<br>✔ Tamanho = igual<br>✔ Posição = diferente</div>
+      </div>
+      <div style="background:var(--amber-l);border-radius:10px;padding:.75rem .9rem;font-size:12px;color:#92400e;border:1.5px solid #fbbf24">
+        <div style="font-weight:800;margin-bottom:4px">✅ Rotação</div>
+        <div>✔ Forma = original<br>✔ Orientação = girada<br>✔ Tamanho = igual<br>✔ Centro fixo</div>
+      </div>
+    </div>
+    <div class="key-box reveal" style="transition-delay:.5s;margin-top:.75rem">
+      <strong>💡 Dica de prova:</strong> A <strong>translação</strong> é a única que mantém a orientação <em>exatamente</em> igual — se parece uma cópia idêntica em outro lugar, é translação!
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ S8 · QUIZ ══════════ -->
+<div class="slide" id="s8">
+  <div class="card" style="--card-accent:linear-gradient(90deg,#be185d,#f472b6);max-width:clamp(480px,85vw,1080px)">
+    <div class="slide-tag" style="--tag-bg:#fce7f3;--tag-color:#9d174d">⚡ Desafie-se!</div>
+    <div class="slide-title">Teste seus conhecimentos</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:.85rem">
+      <span style="font-size:13px;font-weight:700;color:var(--muted)">Placar:</span>
+      <span id="quiz-score" style="font-size:17px;font-weight:800;color:var(--teal)">0 / 5</span>
+      <div id="quiz-dots" style="display:flex;gap:4px"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:clamp(6px,.8vw,12px)" id="quiz-area">
+
+      <div class="challenge-card reveal" id="q0">
+        <div class="q-text">1. Uma figura é deslocada sem girar nem espelhar. O tamanho e a forma se mantêm. Que transformação é essa?</div>
+        <div class="options">
+          <button class="opt-btn" onclick="answerQ(0,'Reflexão')">Reflexão</button>
+          <button class="opt-btn" onclick="answerQ(0,'Rotação')">Rotação</button>
+          <button class="opt-btn" onclick="answerQ(0,'Translação')">Translação</button>
+          <button class="opt-btn" onclick="answerQ(0,'Combinatória')">Combinatória</button>
+        </div>
+        <div class="feedback" id="fb0"></div>
+      </div>
+
+      <div class="challenge-card reveal" id="q1" style="transition-delay:.12s">
+        <div class="q-text">2. O ponto A(3, 2) sofre reflexão no eixo X. Qual é a nova coordenada A'?</div>
+        <div class="options">
+          <button class="opt-btn" onclick="answerQ(1,'(−3, 2)')">(−3, 2)</button>
+          <button class="opt-btn" onclick="answerQ(1,'(3, −2)')">(3, −2)</button>
+          <button class="opt-btn" onclick="answerQ(1,'(−3, −2)')">(−3, −2)</button>
+          <button class="opt-btn" onclick="answerQ(1,'(2, 3)')">(2, 3)</button>
+        </div>
+        <div class="feedback" id="fb1"></div>
+      </div>
+
+      <div class="challenge-card reveal" id="q2" style="transition-delay:.24s">
+        <div class="q-text">3. Um quadrado tem quantos eixos de simetria?</div>
+        <div class="options">
+          <button class="opt-btn" onclick="answerQ(2,'2')">2</button>
+          <button class="opt-btn" onclick="answerQ(2,'4')">4</button>
+          <button class="opt-btn" onclick="answerQ(2,'6')">6</button>
+          <button class="opt-btn" onclick="answerQ(2,'8')">8</button>
+        </div>
+        <div class="feedback" id="fb2"></div>
+      </div>
+
+      <div class="challenge-card reveal" id="q3" style="transition-delay:.36s">
+        <div class="q-text">4. O ponto B(2, 4) é rotacionado 90° em sentido horário em torno da origem. Qual é o novo ponto B'?</div>
+        <div class="options">
+          <button class="opt-btn" onclick="answerQ(3,'(4, −2)')">(4, −2)</button>
+          <button class="opt-btn" onclick="answerQ(3,'(−4, 2)')">(−4, 2)</button>
+          <button class="opt-btn" onclick="answerQ(3,'(−2, −4)')">(−2, −4)</button>
+          <button class="opt-btn" onclick="answerQ(3,'(4, 2)')">(4, 2)</button>
+        </div>
+        <div class="feedback" id="fb3"></div>
+      </div>
+
+      <div class="challenge-card reveal" id="q4" style="grid-column:1/-1;transition-delay:.48s">
+        <div class="q-text">5. Uma figura sofre uma reflexão em relação a um eixo e depois uma translação paralela a esse mesmo eixo. Como se chama essa transformação combinada?</div>
+        <div class="options">
+          <button class="opt-btn" onclick="answerQ(4,'Rotação dupla')">Rotação dupla</button>
+          <button class="opt-btn" onclick="answerQ(4,'Reflexão deslizante')">Reflexão deslizante</button>
+          <button class="opt-btn" onclick="answerQ(4,'Simetria central')">Simetria central</button>
+          <button class="opt-btn" onclick="answerQ(4,'Translação dupla')">Translação dupla</button>
+        </div>
+        <div class="feedback" id="fb4"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ S9 · RESUMÃO ══════════ -->
+<div class="slide" id="s9">
+  <div class="card" style="--card-accent:linear-gradient(90deg,#0d9488,#be185d,#7c3aed);max-width:clamp(480px,85vw,1080px)">
+    <div class="slide-tag" style="--tag-bg:var(--teal-l);--tag-color:#0f766e">📋 Resumão para o Simulado</div>
+    <div class="slide-title">Tudo que você precisa lembrar!</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;font-weight:700">💡 Clique e segure qualquer card para ver mais detalhes!</div>
+    <div class="three-col">
+
+      <div class="resumo-card reveal" style="border-color:var(--teal-m)" data-rov="reflexao">
+        <h3 style="color:var(--teal);font-size:14px;font-weight:700;margin-bottom:.3rem">🪞 Reflexão</h3>
+        <p style="font-size:13px;color:var(--muted)">Espelha em relação ao eixo</p>
+        <p style="font-size:13px;color:var(--muted)">Orientação: INVERTE</p>
+        <p style="font-size:13px;color:var(--muted)">Eixo Y: x muda sinal</p>
+        <p style="font-size:13px;color:var(--muted)">Eixo X: y muda sinal</p>
+        <div class="hold-hint">Segure para ver mais ⬆️</div>
+      </div>
+
+      <div class="resumo-card reveal" style="border-color:var(--rose-m);transition-delay:.12s" data-rov="rotacao">
+        <h3 style="color:var(--rose);font-size:14px;font-weight:700;margin-bottom:.3rem">🔄 Rotação</h3>
+        <p style="font-size:13px;color:var(--muted)">Gira em torno do centro</p>
+        <p style="font-size:13px;color:var(--muted)">Precisa: centro + ângulo + sentido</p>
+        <p style="font-size:13px;color:var(--muted)">90° hor: (x,y)→(y,−x)</p>
+        <p style="font-size:13px;color:var(--muted)">180°: (x,y)→(−x,−y)</p>
+        <div class="hold-hint">Segure para ver mais ⬆️</div>
+      </div>
+
+      <div class="resumo-card reveal" style="border-color:#fbbf24;transition-delay:.24s" data-rov="translacao">
+        <h3 style="color:var(--amber);font-size:14px;font-weight:700;margin-bottom:.3rem">➡️ Translação</h3>
+        <p style="font-size:13px;color:var(--muted)">Desliza pelo vetor (a,b)</p>
+        <p style="font-size:13px;color:var(--muted)">(x,y) → (x+a, y+b)</p>
+        <p style="font-size:13px;color:var(--muted)">Orientação: MANTÉM</p>
+        <p style="font-size:13px;color:var(--muted)">Imagem = idêntica!</p>
+        <div class="hold-hint">Segure para ver mais ⬆️</div>
+      </div>
+
+      <div class="resumo-card reveal" style="border-color:#a78bfa;transition-delay:.36s" data-rov="combinatoria">
+        <h3 style="color:var(--violet);font-size:14px;font-weight:700;margin-bottom:.3rem">🔀 Combinatória</h3>
+        <p style="font-size:13px;color:var(--muted)">2+ transformações em sequência</p>
+        <p style="font-size:13px;color:var(--muted)">A ordem importa!</p>
+        <p style="font-size:13px;color:var(--muted)">Reflexão deslizante:</p>
+        <p style="font-size:13px;color:var(--muted)">Reflexão + Translação</p>
+        <div class="hold-hint">Segure para ver mais ⬆️</div>
+      </div>
+
+      <div class="resumo-card reveal" style="border-color:#38bdf8;transition-delay:.48s" data-rov="simetria">
+        <h3 style="color:var(--sky);font-size:14px;font-weight:700;margin-bottom:.3rem">✳️ Eixos de Simetria</h3>
+        <p style="font-size:13px;color:var(--muted)">Quadrado: 4 eixos</p>
+        <p style="font-size:13px;color:var(--muted)">Retângulo: 2 eixos</p>
+        <p style="font-size:13px;color:var(--muted)">Triâng. equilátero: 3 eixos</p>
+        <p style="font-size:13px;color:var(--muted)">Círculo: infinitos!</p>
+        <div class="hold-hint">Segure para ver mais ⬆️</div>
+      </div>
+
+      <div class="resumo-card reveal" style="border-color:#4ade80;transition-delay:.6s" data-rov="macetes">
+        <h3 style="color:#166534;font-size:14px;font-weight:700;margin-bottom:.3rem">🧠 Macetes de Ouro</h3>
+        <div style="display:grid;grid-template-columns:1fr;gap:2px;font-size:12px;color:var(--muted);margin-top:4px">
+          <p>✅ Reflexão → espelha (inverte)</p>
+          <p>✅ Rotação → gira (centro fixo)</p>
+          <p>✅ Translação → desliza (igual)</p>
+          <p>✅ Ref.deslizante = ref+transl</p>
+        </div>
+        <div class="hold-hint">Segure para ver mais ⬆️</div>
+      </div>
+
+    </div>
+    <div style="text-align:center;margin-top:.9rem;font-size:14px;color:var(--muted)">
+      Bons estudos! 🎉 Você está preparado(a) para o simulado!
+    </div>
+  </div>
+</div>
+
+</div><!-- /slides-outer -->
+
+<!-- ─── NAV ─── -->
+<div id="nav">
+  <button class="nav-btn" id="btn-prev" onclick="changeSlide(-1)" disabled>←</button>
+  <div class="dot-row" id="dot-row"></div>
+  <span id="slide-info">1 / 10</span>
+  <button class="nav-btn" id="btn-next" onclick="changeSlide(1)">→</button>
+</div>
+
+<script>
+/* ══════════════════════════════════════════
+   SLIDE ENGINE
+══════════════════════════════════════════ */
+const TOTAL=10; let current=0,animating=false;
+const dotRow=document.getElementById('dot-row');
+for(let i=0;i<TOTAL;i++){
+  const d=document.createElement('div');
+  d.className='dot'+(i===0?' active':'');
+  d.onclick=()=>goTo(i); dotRow.appendChild(d);
+}
+function updateNav(){
+  dotRow.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active',i===current));
+  document.getElementById('slide-info').textContent=`${current+1} / ${TOTAL}`;
+  document.getElementById('btn-prev').disabled=current===0;
+  document.getElementById('btn-next').disabled=current===TOTAL-1;
+  document.getElementById('progress').style.width=`${(current/(TOTAL-1))*100}%`;
+}
+function goTo(idx){
+  if(animating||idx===current||idx<0||idx>=TOTAL) return;
+  animating=true;
+  const fromEl=document.getElementById('s'+current);
+  const toEl=document.getElementById('s'+idx);
+  const dir=idx>current?1:-1;
+  fromEl.style.transition='opacity .5s ease,transform .5s ease';
+  fromEl.style.opacity='0'; fromEl.style.transform=`translateY(${dir*-50}px) scale(0.97)`;
+  fromEl.style.pointerEvents='none';
+  toEl.style.transition='none'; toEl.style.opacity='0'; toEl.style.transform=`translateY(${dir*45}px) scale(0.97)`;
+  toEl.classList.add('active'); toEl.getBoundingClientRect();
+  toEl.style.transition='opacity .55s ease,transform .55s ease';
+  toEl.style.opacity='1'; toEl.style.transform='none'; toEl.style.pointerEvents='all';
+  setTimeout(()=>{
+    fromEl.classList.remove('active'); fromEl.style.transition=fromEl.style.opacity=fromEl.style.transform='';
+    current=idx; updateNav(); triggerReveal();
+    if(current===2) initRefCanvas();
+    if(current===3) initRotCanvas();
+    if(current===4) initTraCanvas();
+    if(current===5) initComCanvas();
+    if(current===6) initSymCanvas();
+    animating=false;
+  },550);
+}
+function changeSlide(d){goTo(current+d)}
+document.addEventListener('keydown',e=>{
+  if(document.activeElement&&document.activeElement.tagName==='INPUT') return;
+  if(e.key==='ArrowRight'||e.key==='ArrowDown') changeSlide(1);
+  if(e.key==='ArrowLeft'||e.key==='ArrowUp') changeSlide(-1);
+});
+let lastWheel=0;
+window.addEventListener('wheel',e=>{
+  const now=Date.now(); if(now-lastWheel<800) return; lastWheel=now;
+  if(e.deltaY>25) changeSlide(1); else if(e.deltaY<-25) changeSlide(-1);
+},{passive:true});
+let tsy=0,tsx=0,tst=0;
+document.getElementById('slides-outer').addEventListener('touchstart',e=>{tsy=e.touches[0].clientY;tsx=e.touches[0].clientX;tst=Date.now()},{passive:true});
+document.getElementById('slides-outer').addEventListener('touchend',e=>{
+  const dt=Date.now()-tst,dy=tsy-e.changedTouches[0].clientY,dx=tsx-e.changedTouches[0].clientX;
+  if(dt>500) return;
+  if(Math.abs(dy)>Math.abs(dx)&&Math.abs(dy)>40){dy>0?changeSlide(1):changeSlide(-1)}
+  else if(Math.abs(dx)>40){dx>0?changeSlide(1):changeSlide(-1)}
+},{passive:true});
+
+/* ══════════════════════════════════════════
+   REVEAL
+══════════════════════════════════════════ */
+function triggerReveal(){
+  const s=document.getElementById('s'+current);
+  s.querySelectorAll('.reveal').forEach(el=>{el.classList.remove('visible');void el.offsetWidth});
+  s.querySelectorAll('.reveal').forEach((el,i)=>{
+    const delay=parseFloat(el.style.transitionDelay)||0;
+    setTimeout(()=>el.classList.add('visible'),100+i*80+delay*500);
+  });
+}
+setTimeout(triggerReveal,80); updateNav();
+
+/* ══════════════════════════════════════════
+   HOLD INTERACTION
+══════════════════════════════════════════ */
+function setupHoldModal(selector,dataAttr,prefix){
+  document.querySelectorAll(selector).forEach(el=>{
+    let timer=null;
+    const show=()=>{
+      const id=el.getAttribute(dataAttr);
+      const ov=document.getElementById(prefix+id);
+      if(ov) ov.classList.add('visible');
+    };
+    const hide=()=>{
+      const id=el.getAttribute(dataAttr);
+      const ov=document.getElementById(prefix+id);
+      if(ov) ov.classList.remove('visible');
+      clearTimeout(timer); timer=null;
+    };
+    el.addEventListener('mousedown',()=>{timer=setTimeout(show,150)});
+    el.addEventListener('mouseup',hide); el.addEventListener('mouseleave',hide);
+    el.addEventListener('touchstart',e=>{e.preventDefault();timer=setTimeout(show,150)},{passive:false});
+    el.addEventListener('touchend',hide); el.addEventListener('touchcancel',hide);
+  });
+}
+setupHoldModal('[data-mod]','data-mod','mod-');
+setupHoldModal('[data-rov]','data-rov','rov-');
+
+function closeModal(id){document.getElementById(id).classList.remove('visible')}
+document.querySelectorAll('.modal-overlay').forEach(o=>{
+  o.addEventListener('click',function(e){if(e.target===this) this.classList.remove('visible')});
+});
+
+/* ══════════════════════════════════════════
+   CANVAS UTILITIES
+══════════════════════════════════════════ */
+function setupCanvas(id){
+  const c=document.getElementById(id); if(!c) return null;
+  const W=c.offsetWidth||260,H=c.offsetHeight||180;
+  c.width=W; c.height=H;
+  const ctx=c.getContext('2d');
+  ctx.fillStyle='#f8fbff'; ctx.fillRect(0,0,W,H);
+  return {c,ctx,W,H,cx:W/2,cy:H/2};
+}
+function drawGrid(ctx,W,H,cx,cy,unit,gridColor,axisColor){
+  gridColor=gridColor||'#e8f0f8'; axisColor=axisColor||'#1a6fc4';
+  ctx.strokeStyle=gridColor; ctx.lineWidth=.5;
+  for(let i=-8;i<=8;i++){
+    ctx.beginPath();ctx.moveTo(cx+i*unit,0);ctx.lineTo(cx+i*unit,H);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,cy+i*unit);ctx.lineTo(W,cy+i*unit);ctx.stroke();
+  }
+  ctx.strokeStyle=axisColor; ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(4,cy);ctx.lineTo(W-4,cy);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(cx,H-4);ctx.lineTo(cx,4);ctx.stroke();
+  ctx.fillStyle=axisColor;
+  ctx.beginPath();ctx.moveTo(W-4,cy);ctx.lineTo(W-11,cy-4);ctx.lineTo(W-11,cy+4);ctx.fill();
+  ctx.beginPath();ctx.moveTo(cx,4);ctx.lineTo(cx-4,11);ctx.lineTo(cx+4,11);ctx.fill();
+}
+function drawShape(ctx,pts,fill,stroke,alpha){
+  alpha=alpha===undefined?1:alpha;
+  ctx.save(); ctx.globalAlpha=alpha;
+  ctx.beginPath(); ctx.moveTo(pts[0][0],pts[0][1]);
+  for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i][0],pts[i][1]);
+  ctx.closePath();
+  if(fill){ctx.fillStyle=fill;ctx.fill()}
+  if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.stroke()}
+  ctx.restore();
+}
+function drawLabel(ctx,txt,x,y,color,size){
+  color=color||'#0f172a'; size=size||11;
+  ctx.save();ctx.fillStyle=color;ctx.font=`bold ${size}px DM Sans,sans-serif`;
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(txt,x,y);ctx.restore();
+}
+
+/* ── REFLEXÃO CANVAS ── */
+let refAnim=null,refState=0;
+function initRefCanvas(){
+  const el=document.getElementById('canvas-ref');
+  if(!el) return;
+  el.addEventListener('click',animateRef);
+  drawRefFrame(0);
+}
+function drawRefFrame(t){
+  const d=setupCanvas('canvas-ref'); if(!d) return;
+  const {ctx,W,H,cx,cy}=d; const unit=H/7;
+  drawGrid(ctx,W,H,cx,cy,unit,'#e8f0f8','#0d9488');
+  ctx.save();ctx.strokeStyle='#be185d';ctx.lineWidth=2.5;ctx.setLineDash([5,3]);
+  ctx.beginPath();ctx.moveTo(cx,4);ctx.lineTo(cx,H-4);ctx.stroke();ctx.setLineDash([]);ctx.restore();
+  const orig=[[cx+2*unit,cy-2*unit],[cx+3*unit,cy],[cx+2*unit,cy+unit]];
+  const refl=[
+    [cx+lerp(2*unit,-2*unit,t),cy-2*unit],
+    [cx+lerp(3*unit,-3*unit,t),cy],
+    [cx+lerp(2*unit,-2*unit,t),cy+unit]
+  ];
+  drawShape(ctx,orig,'rgba(13,148,136,.2)','#0d9488');
+  drawShape(ctx,refl,'rgba(190,24,93,.2)','#be185d');
+  drawLabel(ctx,'Original',cx+2.3*unit,cy-2.4*unit,'#0d9488',10);
+  if(t>0.5) drawLabel(ctx,"A'",cx-2.3*unit,cy-2.4*unit,'#be185d',10);
+}
+function lerp(a,b,t){return a+(b-a)*t}
+function animateRef(){
+  if(refAnim) return; refState=0;
+  refAnim=setInterval(()=>{
+    refState+=0.04; drawRefFrame(Math.min(refState,1));
+    if(refState>=1){clearInterval(refAnim);refAnim=null;setTimeout(()=>{refState=0;drawRefFrame(0)},1500)}
+  },20);
+}
+
+/* ── ROTAÇÃO CANVAS ── */
+let rotAnim=null,rotState=0;
+function initRotCanvas(){
+  const el=document.getElementById('canvas-rot');
+  if(!el) return;
+  el.addEventListener('click',animateRot);
+  drawRotFrame(0);
+}
+function drawRotFrame(angle){
+  const d=setupCanvas('canvas-rot'); if(!d) return;
+  const {ctx,W,H,cx,cy}=d; const unit=H/7;
+  drawGrid(ctx,W,H,cx,cy,unit,'#f5e8f0','#be185d');
+  const orig=[[cx+unit,cy-3*unit],[cx+3*unit,cy-2*unit],[cx+2*unit,cy-unit]];
+  function rot(px,py,a){
+    const rx=px-cx,ry=py-cy;
+    return [cx+rx*Math.cos(a)-ry*Math.sin(a),cy+rx*Math.sin(a)+ry*Math.cos(a)];
+  }
+  const rotated=orig.map(([x,y])=>rot(x,y,angle));
+  drawShape(ctx,orig,'rgba(190,24,93,.15)','#be185d');
+  drawShape(ctx,rotated,'rgba(124,58,237,.25)','#7c3aed');
+  ctx.beginPath();ctx.arc(cx,cy,5,0,Math.PI*2);ctx.fillStyle='#be185d';ctx.fill();
+  drawLabel(ctx,'Original',cx+1.5*unit,cy-2.8*unit,'#be185d',9);
+  if(angle>0.5) drawLabel(ctx,"Rotacionado",cx+3.5*unit,cy-unit,'#7c3aed',9);
+}
+function animateRot(){
+  if(rotAnim) return; rotState=0;
+  const target=Math.PI/2;
+  rotAnim=setInterval(()=>{
+    rotState+=0.04; drawRotFrame(Math.min(rotState*target/1,target));
+    if(rotState>=1){clearInterval(rotAnim);rotAnim=null;setTimeout(()=>{rotState=0;drawRotFrame(0)},1500)}
+  },20);
+}
+
+/* ── TRANSLAÇÃO CANVAS ── */
+let traAnim=null,traState=0;
+function initTraCanvas(){
+  const el=document.getElementById('canvas-tra');
+  if(!el) return;
+  el.addEventListener('click',animateTra);
+  drawTraFrame(0);
+}
+function drawTraFrame(t){
+  const d=setupCanvas('canvas-tra'); if(!d) return;
+  const {ctx,W,H,cx,cy}=d; const unit=H/8;
+  drawGrid(ctx,W,H,cx,cy,unit,'#fdf5e0','#d97706');
+  const orig=[
+    [cx-3*unit, cy-2.5*unit],
+    [cx-1*unit, cy-2.5*unit],
+    [cx-2*unit, cy-0.8*unit]
+  ];
+  const dvx = 3.5*unit;
+  const dvy = 2.5*unit;
+  drawShape(ctx, orig, 'rgba(217,119,6,.18)', '#d97706');
+  drawLabel(ctx,'Original',cx-2*unit, cy-2.9*unit,'#d97706',9);
+  const cur = orig.map(([x,y])=>[x + dvx*t, y + dvy*t]);
+  drawShape(ctx, cur, 'rgba(13,148,136,.25)', '#0d9488');
+  if(t>0.05){
+    const ox = orig.reduce((s,[x])=>s+x,0)/3;
+    const oy = orig.reduce((s,[,y])=>s+y,0)/3;
+    const ex = ox + dvx*t;
+    const ey = oy + dvy*t;
+    ctx.save();
+    ctx.strokeStyle='#d97706';ctx.lineWidth=1.5;ctx.setLineDash([4,2]);
+    ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(ex,ey);ctx.stroke();
+    ctx.setLineDash([]);
+    const ang = Math.atan2(ey-oy, ex-ox);
+    ctx.fillStyle='#d97706';
+    ctx.beginPath();
+    ctx.moveTo(ex,ey);
+    ctx.lineTo(ex-10*Math.cos(ang-0.4),ey-10*Math.sin(ang-0.4));
+    ctx.lineTo(ex-10*Math.cos(ang+0.4),ey-10*Math.sin(ang+0.4));
+    ctx.closePath();ctx.fill();
+    ctx.restore();
+  }
+  if(t>0.7){
+    const lx = cur.reduce((s,[x])=>s+x,0)/3;
+    const ly = cur.reduce((s,[,y])=>s+y,0)/3;
+    drawLabel(ctx,"Imagem", lx, ly-unit*0.8,'#0d9488',9);
+  }
+}
+function animateTra(){
+  if(traAnim) return; traState=0;
+  traAnim=setInterval(()=>{
+    traState+=0.03; drawTraFrame(Math.min(traState,1));
+    if(traState>=1){clearInterval(traAnim);traAnim=null;setTimeout(()=>{traState=0;drawTraFrame(0)},1500)}
+  },20);
+}
+
+/* ── COMBINATÓRIA CANVAS ── */
+let transforms=[];
+function initComCanvas(){
+  drawComCanvas();
+}
+function applyTransform(type){
+  transforms.push(type);
+  const log=document.getElementById('transform-log');
+  log.innerHTML='';
+  transforms.forEach(t=>{
+    const tag=document.createElement('span');
+    tag.className='log-tag '+t;
+    tag.textContent=t==='ref'?'🪞 Reflexão':t==='rot'?'🔄 Rotação 90°':'➡️ Translação';
+    log.appendChild(tag);
+  });
+  drawComCanvas();
+}
+function resetTransforms(){
+  transforms=[];
+  document.getElementById('transform-log').innerHTML='<span style="font-style:italic;font-size:12px;color:var(--muted)">Aplique transformações acima...</span>';
+  drawComCanvas();
+}
+function drawComCanvas(){
+  const d=setupCanvas('canvas-com'); if(!d) return;
+  const {ctx,W,H,cx,cy}=d; const unit=H/7;
+  drawGrid(ctx,W,H,cx,cy,unit,'#f0ecff','#7c3aed');
+  let pts=[[cx-3*unit,cy],[cx-unit,cy-2*unit],[cx-unit,cy-unit],[cx+unit,cy-unit],[cx+unit,cy+unit],[cx-unit,cy+unit],[cx-unit,cy]];
+  drawShape(ctx,pts,'rgba(124,58,237,.2)','#7c3aed');
+  drawLabel(ctx,'Figura',cx-2*unit,cy-2.5*unit,'#7c3aed',9);
+  transforms.forEach((t,i)=>{
+    pts=applyToPoints(pts,t,cx,cy,unit);
+    const colors=['#0d9488','#be185d','#d97706','#6366f1'];
+    const c=colors[i%colors.length];
+    drawShape(ctx,pts,`rgba(${hexToRgb(c)},.2)`,c);
+    drawLabel(ctx,`Passo ${i+1}`,pts[0][0]+5,pts[0][1]-12,c,8);
+  });
+}
+function applyToPoints(pts,type,cx,cy,unit){
+  return pts.map(([x,y])=>{
+    const rx=x-cx,ry=y-cy;
+    if(type==='ref') return [cx-rx,y];
+    if(type==='rot') return [cx-ry,cy+rx];
+    if(type==='tra') return [x+unit*1.5,y];
+  });
+}
+function hexToRgb(hex){
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return `${r},${g},${b}`;
+}
+
+/* ── SYMMETRY CANVAS ── */
+let symInit=false;
+function initSymCanvas(){
+  if(!symInit){symInit=true;drawSymCanvas('square')}
+}
+function showSymmetry(type){
+  drawSymCanvas(type);
+}
+function drawSymCanvas(type){
+  const d=setupCanvas('canvas-sym'); if(!d) return;
+  const {ctx,W,H,cx,cy}=d;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#f8fbff';ctx.fillRect(0,0,W,H);
+  const s=Math.min(W,H)*0.32;
+  if(type==='square'){
+    ctx.fillStyle='#e0faf5';ctx.strokeStyle='#0d9488';ctx.lineWidth=2;
+    ctx.fillRect(cx-s,cy-s,s*2,s*2);ctx.strokeRect(cx-s,cy-s,s*2,s*2);
+    const axes=[[cx,cy-s-10,cx,cy+s+10],[cx-s-10,cy,cx+s+10,cy],[cx-s-10,cy-s-10,cx+s+10,cy+s+10],[cx+s+10,cy-s-10,cx-s-10,cy+s+10]];
+    ctx.strokeStyle='#be185d';ctx.lineWidth=1.5;ctx.setLineDash([5,3]);
+    axes.forEach(([x1,y1,x2,y2])=>{ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke()});
+    ctx.setLineDash([]);
+    drawLabel(ctx,'4 eixos de simetria',cx,cy+s+18,'#be185d',10);
+  } else if(type==='rect'){
+    ctx.fillStyle='#e0f2fe';ctx.strokeStyle='#0369a1';ctx.lineWidth=2;
+    ctx.fillRect(cx-s*1.4,cy-s*.7,s*2.8,s*1.4);ctx.strokeRect(cx-s*1.4,cy-s*.7,s*2.8,s*1.4);
+    ctx.strokeStyle='#be185d';ctx.lineWidth=1.5;ctx.setLineDash([5,3]);
+    ctx.beginPath();ctx.moveTo(cx,cy-s*.7-10);ctx.lineTo(cx,cy+s*.7+10);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(cx-s*1.4-10,cy);ctx.lineTo(cx+s*1.4+10,cy);ctx.stroke();
+    ctx.setLineDash([]);
+    drawLabel(ctx,'2 eixos de simetria',cx,cy+s*.7+18,'#be185d',10);
+  } else if(type==='triangle'){
+    // ── CORREÇÃO: triângulo equilátero centralizado explicitamente ──
+    // Calcula altura do equilátero com base 2s
+    const h = s * Math.sqrt(3);
+    // Vértice no topo, base embaixo — centralizado verticalmente
+    const top  = [cx,      cy - h * 0.55];
+    const botL = [cx - s,  cy + h * 0.45];
+    const botR = [cx + s,  cy + h * 0.45];
+    const pts  = [top, botL, botR];
+    ctx.fillStyle='#ede9fe'; ctx.strokeStyle='#7c3aed'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(pts[0][0],pts[0][1]);
+    pts.forEach(([px,py])=>ctx.lineTo(px,py));
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    // Eixos de simetria: cada vértice → ponto médio do lado oposto
+    ctx.strokeStyle='#be185d'; ctx.lineWidth=1.5; ctx.setLineDash([5,3]);
+    pts.forEach(([px,py],i)=>{
+      const op  = pts[(i+1)%3];
+      const op2 = pts[(i+2)%3];
+      const mx  = (op[0]+op2[0])/2;
+      const my  = (op[1]+op2[1])/2;
+      ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(mx,my); ctx.stroke();
+    });
+    ctx.setLineDash([]);
+    // Rótulo abaixo da base real
+    drawLabel(ctx,'3 eixos de simetria', cx, botL[1]+14, '#be185d', 10);
+  } else if(type==='circle'){
+    ctx.fillStyle='#fce7f3';ctx.strokeStyle='#be185d';ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(cx,cy,s,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.strokeStyle='#be185d';ctx.lineWidth=1.2;ctx.setLineDash([4,3]);
+    for(let a=0;a<180;a+=30){
+      const r=a*Math.PI/180;
+      ctx.beginPath();ctx.moveTo(cx+s*Math.cos(r),cy+s*Math.sin(r));ctx.lineTo(cx-s*Math.cos(r),cy-s*Math.sin(r));ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    drawLabel(ctx,'Infinitos eixos!',cx,cy+s+14,'#be185d',10);
+  }
+}
+window.addEventListener('resize',()=>{
+  if(current===2) drawRefFrame(0);
+  if(current===3) drawRotFrame(0);
+  if(current===4) drawTraFrame(0);
+  if(current===5) drawComCanvas();
+  if(current===6) initSymCanvas();
+});
+
+/* ══════════════════════════════════════════
+   QUIZ
+══════════════════════════════════════════ */
+const ANSWERS={0:'Translação',1:'(3, −2)',2:'4',3:'(4, −2)',4:'Reflexão deslizante'};
+const EXPL={
+  0:'A translação desliza a figura sem girar nem espelhar — forma e orientação iguais!',
+  1:'Reflexão no eixo X: o y muda de sinal → (3, 2) vira (3, −2)',
+  2:'Quadrado tem 2 medianas + 2 diagonais como eixos = 4 eixos de simetria!',
+  3:'90° horário: (x,y) → (y, −x) → (2,4) → (4, −2)',
+  4:'Reflexão + translação paralela ao eixo = reflexão deslizante!'
+};
+let answered={},quizScore=0;
+function answerQ(q,choice){
+  if(answered[q]) return; answered[q]=true;
+  const fb=document.getElementById('fb'+q);
+  const card=document.getElementById('q'+q);
+  card.querySelectorAll('.opt-btn').forEach(b=>{
+    b.disabled=true;
+    if(b.textContent.trim()===choice) b.classList.add(choice===ANSWERS[q]?'correct':'wrong');
+    if(b.textContent.trim()===ANSWERS[q]&&choice!==ANSWERS[q]) b.classList.add('correct');
+  });
+  if(choice===ANSWERS[q]){
+    fb.textContent='✅ Correto! '+EXPL[q]; fb.className='feedback ok'; quizScore++;
+  } else {
+    fb.textContent='❌ '+EXPL[q]; fb.className='feedback nok';
+  }
+  document.getElementById('quiz-score').textContent=`${quizScore} / 5`;
+  const dot=document.createElement('span');
+  dot.style.cssText=`display:inline-block;width:10px;height:10px;border-radius:50%;background:${choice===ANSWERS[q]?'#0d9488':'#be185d'};margin-right:3px`;
+  document.getElementById('quiz-dots').appendChild(dot);
+}
+</script>
+</body>
+</html>
